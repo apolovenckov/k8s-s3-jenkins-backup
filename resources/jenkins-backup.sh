@@ -31,3 +31,4 @@ fi
 
 # Удаление временного файла бэкапа
 rm -f /tmp/$BACKUP_FILE_NAME
+kubectl exec -n $JENKINS_NAMESPACE $POD_NAME -- rm -f /tmp/$BACKUP_FILE_NAME
