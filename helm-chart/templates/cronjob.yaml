@@ -1,0 +1,174 @@
+{{- if .Values.cronjobs }}
+{{- range $cronjobName, $cronjobValue := $.Values.cronjobs }}
+{{- if not (eq ($cronjobValue.enabled | toString) "false") }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ tpl $cronjobName $ | lower }}
+  labels:
+    {{- include "template.labels" $ | nindent 4 }}
+    {{- if $cronjobValue.labels }}
+      {{- toYaml $cronjobValue.labels | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- include "template.annotations" $ | nindent 4 }}
+    {{- if $cronjobValue.annotations }}
+      {{- toYaml $cronjobValue.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  schedule: {{ tpl $cronjobValue.schedule $ | quote }}
+  successfulJobsHistoryLimit: {{ $cronjobValue.successfulJobsHistoryLimit | default "1" }}
+  failedJobsHistoryLimit: {{ $cronjobValue.failedJobsHistoryLimit | default "1" }}
+  concurrencyPolicy: {{ $cronjobValue.concurrencyPolicy | default "Forbid" }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "template.selectorLabels" $ | nindent 8 }}
+    spec:
+      backoffLimit: {{ $cronjobValue.backoffLimit | default "0" }}
+      template:
+        metadata:
+          labels:
+            {{- include "template.selectorLabels" $ | nindent 12 }}
+        spec:
+          restartPolicy: {{ $cronjobValue.restartPolicy | default "Never" }}
+        {{- if $cronjobValue.nodeSelector }}
+          nodeSelector:
+            {{- tpl (toYaml $cronjobValue.nodeSelector) $ | nindent 12 }}
+        {{- else if $.Values.nodeSelector }}
+          nodeSelector:
+            {{- tpl (toYaml $.Values.nodeSelector) $ | nindent 12 }}
+        {{- end }}
+ 
+          containers:
+            - name: {{ tpl $cronjobName $ | lower }}
+              {{- if $cronjobValue.imageOverride }}
+              image: {{ tpl $cronjobValue.imageOverride $ }}
+              {{- else if $cronjobValue.image }}
+              image: {{ tpl ($cronjobValue.image.registry | default $.Values.image.registry | toString) $ }}/
+                    {{- tpl ($cronjobValue.image.repository | default $.Values.image.repository | toString) $ }}/
+                    {{- tpl ($cronjobValue.image.name | default $.Values.image.name | default $.Chart.Name | toString) $ }}:
+                    {{- tpl ($cronjobValue.image.tag | default $.Values.image.tag | default $.Chart.AppVersion | toString) $ }}
+              {{- end }}
+              imagePullPolicy: {{ $cronjobValue.imagePullPolicy | default  $.Values.imagePullPolicy  | default "Always" }}
+              {{- if $cronjobValue.command }}
+              command: 
+                {{- tpl (toYaml $cronjobValue.command) $ | nindent 14 }}
+              {{- end }}
+    
+              {{- if $cronjobValue.args }}
+              args:
+                {{- tpl (toYaml $cronjobValue.args) $ | nindent 14 }}
+              {{- end }}
+              env:
+                {{- if $cronjobValue.env }}
+                  {{- tpl (toYaml $cronjobValue.env) $ | nindent 14 }}
+                {{- end }}
+              {{- if $cronjobValue.extraEnvVars }}
+                {{- range $extraEnvVarName, $extraEnvVarValue := $cronjobValue.extraEnvVars  }}
+                - name: {{ $extraEnvVarName }}
+                  value: {{ tpl $extraEnvVarValue $ | quote }}
+                {{- end }}
+              {{- end }}
+              {{- if $cronjobValue.envFrom }}
+              envFrom:
+                {{- tpl (toYaml $cronjobValue.envFrom) $ | nindent 14 }}
+              {{- end }}
+              {{- if $cronjobValue.resources }}
+              resources:
+                {{- tpl (toYaml $cronjobValue.resources) $ | nindent 14 }}
+              {{- end }}
+              {{- if $cronjobValue.securityContext }}
+              securityContext:
+                {{- tpl (toYaml $cronjobValue.securityContext) $ | nindent 14 }}
+              {{- end }}
+              {{- if $cronjobValue.volumeMounts }}
+              volumeMounts:
+                {{- tpl (toYaml $cronjobValue.volumeMounts) $ | nindent 14 }}
+              {{- end }}
+    
+          {{- if $cronjobValue.extraContainers }}
+          {{- range $extraContainerName, $extraContainerValue := $cronjobValue.extraContainers }}
+            - name: {{ tpl $extraContainerName $ | squote | lower }}
+              {{- if $extraContainerValue.imageOverride }}
+              image: {{ tpl $extraContainerValue.imageOverride $ }}
+              {{- else if $extraContainerValue.image }}
+              image: {{ tpl ($extraContainerValue.image.registry | default $cronjobValue.image.registry | default $.Values.image.registry | toString) $ }}/
+                    {{- tpl ($extraContainerValue.image.repository | default $cronjobValue.image.repository | default $.Values.image.repository | toString) $ }}/
+                    {{- tpl ($extraContainerValue.image.name | default $cronjobValue.image.name | default $.Values.image.name | default $.Chart.Name | toString) $ }}:
+                    {{- tpl ($extraContainerValue.image.tag | default $cronjobValue.image.tag | default $.Values.image.tag | default $.Chart.AppVersion | toString) $ }}
+              {{- end }}
+              imagePullPolicy: {{ $extraContainerValue.imagePullPolicy | default $.Values.imagePullPolicy  | default "Always" }}
+              {{- if $extraContainerValue.command }}
+              command: 
+                {{- tpl (toYaml $extraContainerValue.command) $ | nindent 14 }}
+              {{- end }}
+
+              {{- if $extraContainerValue.args }}
+              args:
+                {{- tpl (toYaml $extraContainerValue.args) $ | nindent 14 }}
+              {{- end }}
+              env:
+              {{- if $extraContainerValue.env }}
+                {{- tpl (toYaml $extraContainerValue.env) $ | nindent 14 }}
+              {{- end }}
+              {{- if $extraContainerValue.extraEnvVars }}
+                {{- range $extraEnvVarsName, $extraEnvVarsValue := $extraContainerValue.extraEnvVars }}
+                - name: {{ $extraEnvVarsName }}
+                  value: {{ tpl $extraEnvVarsValue $ | quote }}
+                {{- end }}
+              {{- end }}
+    
+              {{- if $extraContainerValue.envFrom }}
+              envFrom:
+                {{- tpl (toYaml $extraContainerValue.envFrom) $ | nindent 14 }}
+              {{- end }}
+    
+              {{- if $extraContainerValue.resources }}
+              resources:
+                {{- tpl (toYaml $extraContainerValue.resources) $ | nindent 14 }}
+              {{- end }}
+    
+              {{- if $extraContainerValue.securityContext }}
+              securityContext:
+                {{- tpl (toYaml $extraContainerValue.securityContext) $ | nindent 14 }}
+              {{- end }}
+    
+              {{- if $extraContainerValue.volumeMounts }}
+              volumeMounts:
+                {{- tpl (toYaml $extraContainerValue.volumeMounts) $ | nindent 14 }}
+              {{- end }}
+          {{- end }}
+          {{- end }}
+    
+          {{- if $cronjobValue.hostAliases }}
+          hostAliases:
+            {{- tpl (toYaml $cronjobValue.hostAliases) $ | nindent 10 }}
+          {{- end }}
+    
+          {{- if $cronjobValue.imagePullSecrets }}
+          imagePullSecrets:
+            {{- tpl (toYaml $cronjobValue.imagePullSecrets) $ | nindent 10 }}
+          {{- else if $.Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- tpl (toYaml $.Values.imagePullSecrets) $ | nindent 10 }}
+          {{- end }}
+    
+          {{- if $cronjobValue.serviceAccountName }}
+          serviceAccountName: {{ tpl ($cronjobValue.serviceAccountName) $ }}
+          {{- end }}
+    
+          {{- if $cronjobValue.podSecurityContext }}
+          securityContext:
+            {{- tpl (toYaml $cronjobValue.podSecurityContext) $ | nindent 10 }}
+          {{- end }}
+    
+          {{- if $cronjobValue.volumes }}
+          volumes:
+            {{- tpl (toYaml $cronjobValue.volumes) $ | nindent 10 }}
+          {{- end }}
+
+---
+{{- end }}
+{{- end }}
+{{- end }}

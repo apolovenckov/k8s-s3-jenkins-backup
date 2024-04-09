@@ -1,0 +1,63 @@
+name: jenkins-backup
+
+image:
+  registry: docker.io
+  repository: apolovenkov
+  name: jenkins-backup
+  tag: latest
+
+secrets:
+  enabled: true
+  aws:
+    name: ""
+    aws_access_key_id: ""
+    aws_access_key: ""
+
+rbac:
+  enabled: true
+  name: jenkins-backup
+  namespace: jenkins-test
+  
+
+cronjobs:
+  jenkins-backup:
+    serviceAccountName: "{{ $.Values.rbac.name }}"
+    schedule: "0 0 * * *"
+    restartPolicy: Never
+    image:
+      registry: "{{ $.Values.image.registry }}"
+      repository: "{{ $.Values.image.repository }}"
+      name: "{{ $.Values.image.name }}"
+      tag: "{{ $.Values.image.tag }}"
+    env:
+      - name: TZ
+        value: Europe/Moscow
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+           secretKeyRef:
+             name: "{{ $.Values.secrets.aws.name }}"
+             key: aws_secret_access_key
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+           secretKeyRef:
+             name: "{{ $.Values.secrets.aws.name }}"
+             key: aws_secret_access_key_id
+      - name: AWS_S3_ENDPOINT_URL
+        value: ""
+      - name: AWS_S3_ENDPOINT_SCEME
+        value: "https"
+      - name: AWS_DEFAULT_REGION
+        value: "eu-west-1"
+      - name: AWS_BUCKET_NAME
+        value: ""
+      - name: AWS_BUCKET_BACKUP_PATH
+        value: ""
+      - name: BACKUP_DEPTH
+        value: "1"
+      - name: JENKINS_LABEL
+        value: "app.kubernetes.io/name=jenkins"
+      - name: JENKINS_NAMESPACE
+        value: "{{ $.Values.rbac.namespace }}"
+      - name: JENKINS_HOME
+        value: "/var/jenkins_home"
+
