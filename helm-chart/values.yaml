@@ -60,4 +60,6 @@ cronjobs:
         value: "{{ $.Values.rbac.namespace }}"
       - name: JENKINS_HOME
         value: "/var/jenkins_home"
+      - name: BACKUP_PATH
+        value: "/var/backups"
 
