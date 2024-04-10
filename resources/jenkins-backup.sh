@@ -8,9 +8,10 @@ BACKUP_FILE_NAME="jenkins-backup-$(date +'%Y%m%d%H%M%S').tar.gz"
 
 # Создание архива директории
 echo -e "Start archiving the jenkins home directory at $(date +'%d-%m-%Y %H:%M:%S')."
-kubectl exec -n $JENKINS_NAMESPACE $POD_NAME -- tar czf $BACKUP_PATH/$BACKUP_FILE_NAME $JENKINS_HOME
+kubectl exec -n $JENKINS_NAMESPACE $POD_NAME -c jenkins -- mkdir -p $BACKUP_PATH
+kubectl exec -n $JENKINS_NAMESPACE $POD_NAME -c jenkins -- tar czf $BACKUP_PATH/$BACKUP_FILE_NAME -C $JENKINS_HOME .
 echo -e "Starting to copy the archive the jenkins home directory at $(date +'%d-%m-%Y %H:%M:%S')."
-kubectl cp -n $JENKINS_NAMESPACE $POD_NAME:$BACKUP_PATH/$BACKUP_FILE_NAME /tmp/$BACKUP_FILE_NAME
+kubectl cp -c jenkins -n $JENKINS_NAMESPACE $POD_NAME:$BACKUP_PATH/$BACKUP_FILE_NAME /tmp/$BACKUP_FILE_NAME
 
 # Перемещение архива в S3
 if awsoutput=$(aws --endpoint-url $AWS_S3_ENDPOINT_URL s3 cp /tmp/$BACKUP_FILE_NAME s3://$AWS_BUCKET_NAME$AWS_BUCKET_BACKUP_PATH/$BACKUP_FILE_NAME 2>&1)

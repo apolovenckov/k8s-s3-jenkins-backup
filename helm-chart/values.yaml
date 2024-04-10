@@ -24,6 +24,7 @@ cronjobs:
     serviceAccountName: "{{ $.Values.rbac.name }}"
     schedule: "0 0 * * *"
     restartPolicy: Never
+    imagePullPolicy: Always
     image:
       registry: "{{ $.Values.image.registry }}"
       repository: "{{ $.Values.image.repository }}"
