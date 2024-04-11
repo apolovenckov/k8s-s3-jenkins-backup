@@ -30,6 +30,13 @@ cronjobs:
       repository: "{{ $.Values.image.repository }}"
       name: "{{ $.Values.image.name }}"
       tag: "{{ $.Values.image.tag }}"
+    resources:
+      requests:
+        cpu: '1'
+        memory: "1Gi"
+      limits:
+        cpu: '1'
+        memory: "1Gi"
     env:
       - name: TZ
         value: Europe/Moscow

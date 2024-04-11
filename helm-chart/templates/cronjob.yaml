@@ -76,7 +76,7 @@ spec:
               {{- end }}
               {{- if $cronjobValue.resources }}
               resources:
-                {{- tpl (toYaml $cronjobValue.resources) $ | nindent 14 }}
+                {{- tpl (toYaml $cronjobValue.resources) $ | nindent 16 }}
               {{- end }}
               {{- if $cronjobValue.securityContext }}
               securityContext:
@@ -126,7 +126,7 @@ spec:
     
               {{- if $extraContainerValue.resources }}
               resources:
-                {{- tpl (toYaml $extraContainerValue.resources) $ | nindent 14 }}
+                {{- tpl (toYaml $extraContainerValue.resources) $ | nindent 16 }}
               {{- end }}
     
               {{- if $extraContainerValue.securityContext }}
