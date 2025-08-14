@@ -1,9 +1,9 @@
-name: jenkins-backup
+name: k8s-s3-backup
 
 image:
   registry: docker.io
   repository: apolovenkov
-  name: jenkins-backup
+  name: k8s-s3-backup
   tag: latest
 
 secrets:
@@ -15,12 +15,12 @@ secrets:
 
 rbac:
   enabled: true
-  name: jenkins-backup
-  namespace: jenkins-test
+  name: k8s-s3-backup
+  namespace: default
   
 
 cronjobs:
-  jenkins-backup:
+  backup:
     serviceAccountName: "{{ $.Values.rbac.name }}"
     schedule: "0 0 * * *"
     restartPolicy: Never
@@ -52,22 +52,25 @@ cronjobs:
              key: aws_secret_access_key_id
       - name: AWS_S3_ENDPOINT_URL
         value: ""
-      - name: AWS_S3_ENDPOINT_SCEME
-        value: "https"
       - name: AWS_DEFAULT_REGION
         value: "eu-west-1"
       - name: AWS_BUCKET_NAME
         value: ""
       - name: AWS_BUCKET_BACKUP_PATH
         value: ""
-      - name: BACKUP_DEPTH
-        value: "1"
-      - name: JENKINS_LABEL
-        value: "app.kubernetes.io/name=jenkins"
-      - name: JENKINS_NAMESPACE
+      - name: BACKUP_TTL
+        value: "7d" # пример: хранить 7 дней
+      - name: BACKUP_NAME_PREFIX
+        value: "backup"
+      - name: KUBE_NAMESPACE
         value: "{{ $.Values.rbac.namespace }}"
-      - name: JENKINS_HOME
-        value: "/var/jenkins_home"
-      - name: BACKUP_PATH
-        value: "/var/backups"
-
+      - name: WORKLOAD_KIND
+        value: "deployment" # deployment|statefulset|pod (или пусто при использовании селектора)
+      - name: WORKLOAD_NAME
+        value: ""
+      - name: POD_LABEL_SELECTOR
+        value: "" # пример: app=myapp,component=api
+      - name: CONTAINER
+        value: "" # пусто => авто-детект, если контейнер один
+      - name: SRC_PATH
+        value: "/data"

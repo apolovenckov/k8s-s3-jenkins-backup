@@ -1,5 +1,5 @@
 apiVersion: v2
-name: jenkins-backup
-description: Helm chart for Kubernetes
-version: 0.0.1
-appVersion: 0.0.1
+name: k8s-s3-backup
+description: Universal Kubernetes volume backup to S3 (streaming, TTL)
+version: 0.1.0
+appVersion: 0.1.0

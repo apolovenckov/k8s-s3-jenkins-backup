@@ -1,7 +1,17 @@
-# Set the base image
+############################
+# Builder: compile Go binary
+############################
+FROM golang:1.21-alpine AS builder
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -o /out/backup ./cmd/backup
+
+############################
+# Runtime: tools + our binary
+############################
 FROM alpine:3.6
 
-# Install dependencies
+# Install dependencies (awscli + helpers)
 RUN apk -v --update add \
         python \
         py-pip \
@@ -19,11 +29,10 @@ RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
-ENV JENKINS_LABEL='app.kubernetes.io/name=jenkins'
-ENV JENKINS_NAMESPACE='jenkins'
-ENV JENKINS_HOME='/var/jenkins_home'
+# No baked-in app defaults; configure via env at runtime
 
-# Copy backup script and execute
-COPY resources/jenkins-backup.sh /
-RUN chmod +x /jenkins-backup.sh
-CMD ["sh", "/jenkins-backup.sh"]
+# Copy Go binary
+COPY --from=builder /out/backup /usr/local/bin/backup
+
+# Run backup tool
+ENTRYPOINT ["/usr/local/bin/backup"]

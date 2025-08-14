@@ -1,7 +1,7 @@
 {{- if .Values.cronjobs }}
 {{- range $cronjobName, $cronjobValue := $.Values.cronjobs }}
 {{- if not (eq ($cronjobValue.enabled | toString) "false") }}
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ tpl $cronjobName $ | lower }}
